@@ -6,15 +6,31 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
 
+//vertex shader code
+const char* vertexShaderSource = "#version 330 core\n"
+"layout (location = 0) in vec3 aPos;\n"
+"void main()\n"
+"{\n"
+"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+"}\0";
+
+//fragment shader code
+const char* fragmentShaderSource = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+"}\n\0";
+
 //settings
 const unsigned int screenWidth  = 800;
 const unsigned int screenHeight = 600;
 
 int main(void)
 {
-    glfwInit();                                                                         //init the window
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);                                      //configure whatever is specified, and then choosen option from given enum
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);                                      //configure whatever is specified, and then choosen option from given enum
+    glfwInit();                                                                                           //init the window
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);                                                       //configure whatever is specified, and then choosen option from given enum
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);                                                       //configure whatever is specified, and then choosen option from given enum
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "LearnOpenGL", NULL, NULL);         //intialize the window, and then make sure that it was created successfully
@@ -29,15 +45,94 @@ int main(void)
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))                            //Initialize the glad library
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))                                             //Initialize the glad library
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-    glViewport(0, 0, 800, 600);                                                         //set the viewport of the window so that way open gl knows the size and position of the render
+    glViewport(0, 0, 800, 600);                                                                         //set the viewport of the window so that way open gl knows the size and position of the render
 
 
-    //main while loop for rendering
+    //------------------------------shader code---------------------------
+    //create a var and then use that far to store the source code for the given shader created before, passing in ssaid code, and the compiling it
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    //check to see if your shader compiled correctly
+    int success;
+    char infoLog[512];
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "Failed to initialize vertex shader " << infoLog << std::endl;
+    }
+
+    //now do the same for the fragment shader
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "Failed to initialize fragment shader " << infoLog <<  std::endl;
+    }
+
+    //lastly create a shader program that is used for the actual rendering, and then link the complied shaders into it
+    unsigned int shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    //check to see if shader program was linked correctly
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cout << "shader program linking failed: " << infoLog << std::endl;
+    }
+    
+    //delete the shader objects given that they arent needed after program is formed
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+
+    //------------------------------Vertex code----------------------------
+   
+    //set up verticies for triangle in a terms of normalized coordinates
+    float vertices[] =
+    {
+        -0.5f, -0.5f, 0.0f,
+         0.0f,  0.5f, 0.0f,
+         0.5f, -0.5f, -0.5f
+    };
+
+    //create vertex buffer object and vertex array object
+    unsigned int VBO, VAO;
+
+    //generate both the vertex object and array
+    glGenBuffers(1, &VBO);
+    glGenVertexArrays(1, &VAO);
+
+    //bind both the vertex array and then bind/set the vertex buffers
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), vertices, GL_STATIC_DRAW);
+
+    //configure the vertex attributes
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    //this line draws the wireframe polygons
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+
+    //------------------------------Rendering while loop------------------
     while (!glfwWindowShouldClose(window))
     {
         //process input
@@ -46,6 +141,10 @@ int main(void)
         //render functions
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(shaderProgram); //specify open gl to use the fragement and vertex shaders we defined earlier
+        glBindVertexArray(VAO); //bind the visible triangle as the vertext array
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         //swap render buffers and poll key press events
         glfwSwapBuffers(window); 
