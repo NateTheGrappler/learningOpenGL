@@ -104,22 +104,34 @@ int main(void)
     //set up verticies for triangle in a terms of normalized coordinates
     float vertices[] =
     {
-        -0.5f, -0.5f, 0.0f,
-         0.0f,  0.5f, 0.0f,
-         0.5f, -0.5f, -0.5f
+        0.5f,  0.5f, 0.0f, //top right
+        0.5f, -0.5f, 0.0f, //bottom right
+       -0.5f, -0.5f, 0.0f,  //bottom left
+       -0.5f,  0.5f, 0.0f //top left
+    };
+
+    unsigned int indicies[] =
+    {
+        0, 1, 3, //first triangle
+        1, 2, 3  //second triangle
     };
 
     //create vertex buffer object and vertex array object
-    unsigned int VBO, VAO;
+    unsigned int VBO, VAO, EBO;
 
     //generate both the vertex object and array
-    glGenBuffers(1, &VBO);
     glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
     //bind both the vertex array and then bind/set the vertex buffers
     glBindVertexArray(VAO);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(float), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
 
     //configure the vertex attributes
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -129,7 +141,7 @@ int main(void)
     glBindVertexArray(0);
 
     //this line draws the wireframe polygons
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
     //------------------------------Rendering while loop------------------
@@ -143,8 +155,9 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram); //specify open gl to use the fragement and vertex shaders we defined earlier
-        glBindVertexArray(VAO); //bind the visible triangle as the vertext array
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glBindVertexArray(VAO);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        //glBindVertexArray(0);
 
         //swap render buffers and poll key press events
         glfwSwapBuffers(window); 
