@@ -22,6 +22,13 @@ const char* fragmentShaderSource = "#version 330 core\n"
 "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
 "}\n\0";
 
+const char* fragmentShaderYellowSource = "#version 330 core\n"
+"out vec4 FragColor;\n"
+"void main()\n"
+"{\n"
+"   FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
+"}\n\0";
+
 //settings
 const unsigned int screenWidth  = 800;
 const unsigned int screenHeight = 600;
@@ -80,6 +87,16 @@ int main(void)
         std::cout << "Failed to initialize fragment shader " << infoLog <<  std::endl;
     }
 
+    unsigned int fragmentShaderYellow = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShaderYellow, 1, &fragmentShaderYellowSource, NULL);
+    glCompileShader(fragmentShaderYellow);
+    glGetShaderiv(fragmentShaderYellow, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "Failed to initialize yellow fragment shader " << infoLog <<  std::endl;
+    }
+
     //lastly create a shader program that is used for the actual rendering, and then link the complied shaders into it
     unsigned int shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
@@ -92,6 +109,16 @@ int main(void)
     {
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
         std::cout << "shader program linking failed: " << infoLog << std::endl;
+    }
+
+    unsigned int yellowShaderProgram = glCreateProgram();
+    glAttachShader(yellowShaderProgram, vertexShader);
+    glAttachShader(yellowShaderProgram, fragmentShaderYellow);
+    glLinkProgram(yellowShaderProgram);
+    if (!success)
+    {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cout << "shader program yellow linking failed: " << infoLog << std::endl;
     }
     
     //delete the shader objects given that they arent needed after program is formed
@@ -169,6 +196,7 @@ int main(void)
         glBindVertexArray(VAO[0]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
+        glUseProgram(yellowShaderProgram);
         glBindVertexArray(VAO[1]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
