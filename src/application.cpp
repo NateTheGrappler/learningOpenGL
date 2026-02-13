@@ -104,10 +104,15 @@ int main(void)
     //set up verticies for triangle in a terms of normalized coordinates
     float vertices[] =
     {
-        0.5f,  0.5f, 0.0f, //top right
-        0.5f, -0.5f, 0.0f, //bottom right
-       -0.5f, -0.5f, 0.0f,  //bottom left
-       -0.5f,  0.5f, 0.0f //top left
+        //first triangle
+        -0.9f, -0.5f, 0.0f,  // left 
+        -0.0f, -0.5f, 0.0f,  // right
+        -0.45f, 0.5f, 0.0f,  // top
+
+        //second triangle
+        -0.0f, -0.5f, 0.0f, //left
+         0.9f, -0.5f, 0.0f, //right
+         0.45f,  0.5f, 0.0f, //top
     };
 
     unsigned int indicies[] =
@@ -141,7 +146,7 @@ int main(void)
     glBindVertexArray(0);
 
     //this line draws the wireframe polygons
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
     //------------------------------Rendering while loop------------------
@@ -156,8 +161,9 @@ int main(void)
 
         glUseProgram(shaderProgram); //specify open gl to use the fragement and vertex shaders we defined earlier
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        //glBindVertexArray(0);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(0);
 
         //swap render buffers and poll key press events
         glfwSwapBuffers(window); 
