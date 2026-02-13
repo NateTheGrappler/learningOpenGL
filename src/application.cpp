@@ -102,17 +102,19 @@ int main(void)
     //------------------------------Vertex code----------------------------
    
     //set up verticies for triangle in a terms of normalized coordinates
-    float vertices[] =
+    float firstTriangle[] =
     {
         //first triangle
         -0.9f, -0.5f, 0.0f,  // left 
         -0.0f, -0.5f, 0.0f,  // right
-        -0.45f, 0.5f, 0.0f,  // top
-
+        -0.45f, 0.5f, 0.0f  // top
+    };
+    float secondTriangle[] =
+    {
         //second triangle
         -0.0f, -0.5f, 0.0f, //left
          0.9f, -0.5f, 0.0f, //right
-         0.45f,  0.5f, 0.0f, //top
+         0.45f,  0.5f, 0.0f //top
     };
 
     unsigned int indicies[] =
@@ -122,28 +124,31 @@ int main(void)
     };
 
     //create vertex buffer object and vertex array object
-    unsigned int VBO, VAO, EBO;
+    unsigned int VBO[2], VAO[2];
+    unsigned int EBO;
 
     //generate both the vertex object and array
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
+    glGenVertexArrays(2, VAO);
+    glGenBuffers(2, VBO);
     glGenBuffers(1, &EBO);
 
     //bind both the vertex array and then bind/set the vertex buffers
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
-
-    //configure the vertex attributes
+    glBindVertexArray(VAO[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(firstTriangle), firstTriangle, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    //second triangle set up
+    glBindVertexArray(VAO[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(secondTriangle), secondTriangle, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    //unbind the data after everything
+    //glBindBuffer(GL_ARRAY_BUFFER, 0);
+    //glBindVertexArray(0);
 
     //this line draws the wireframe polygons
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -160,10 +165,15 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram); //specify open gl to use the fragement and vertex shaders we defined earlier
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        
+        glBindVertexArray(VAO[0]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glBindVertexArray(VAO[1]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
         //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        //glBindVertexArray(0);
 
         //swap render buffers and poll key press events
         glfwSwapBuffers(window); 
