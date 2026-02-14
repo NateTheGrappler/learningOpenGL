@@ -15,7 +15,6 @@ struct ShaderPrograms
 {
     std::string VertexSource;
     std::string FragementSource;
-    std::string YellowFragementSource;
 };
 static ShaderPrograms parseShader(std::string filePath)
 {
@@ -51,11 +50,6 @@ static ShaderPrograms parseShader(std::string filePath)
                 //set as fragment shader
                 type = ShaderType::FRAGEMENT;
             }
-            else if (line.find("fragmentYellow") != std::string::npos)
-            {
-                //set as fragment shader
-                type = ShaderType::FRAGEMENTYELLOW;
-            }
         }
         else
         {
@@ -64,7 +58,7 @@ static ShaderPrograms parseShader(std::string filePath)
         }
     }
 
-    return { ss[0].str(), ss[1].str(), ss[2].str() };
+    return { ss[0].str(), ss[1].str() };
 }
 static unsigned int compileShader(unsigned int type, const std::string& source)
 {
@@ -145,10 +139,8 @@ int main(void)
     ShaderPrograms programs = parseShader("src/res/shaders/Basic.shader");
     std::cout << programs.VertexSource << std::endl;
     std::cout << programs.FragementSource << std::endl;
-    std::cout << programs.YellowFragementSource << std::endl;
 
     unsigned int shaderProgram = createShader(programs.VertexSource, programs.FragementSource);
-    unsigned int yellowShaderProgram = createShader(programs.VertexSource, programs.YellowFragementSource);
 
 
     //------------------------------Vertex code----------------------------
@@ -157,16 +149,9 @@ int main(void)
     float firstTriangle[] =
     {
         //first triangle
-        -0.9f, -0.5f, 0.0f,  // left 
-        -0.0f, -0.5f, 0.0f,  // right
-        -0.45f, 0.5f, 0.0f  // top
-    };
-    float secondTriangle[] =
-    {
-        //second triangle
-        -0.0f, -0.5f, 0.0f, //left
-         0.9f, -0.5f, 0.0f, //right
-         0.45f,  0.5f, 0.0f //top
+        -0.8f, -0.8f, 0.0f,  // left 
+         0.8f, -0.8f, 0.0f,  // right
+         0.0f,  0.8f, 0.0f   // top
     };
 
     unsigned int indicies[] =
@@ -176,31 +161,25 @@ int main(void)
     };
 
     //create vertex buffer object and vertex array object
-    unsigned int VBO[2], VAO[2];
+    unsigned int VBO, VAO;
     unsigned int EBO;
 
     //generate both the vertex object and array
-    glGenVertexArrays(2, VAO);
-    glGenBuffers(2, VBO);
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
     //bind both the vertex array and then bind/set the vertex buffers
-    glBindVertexArray(VAO[0]);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(firstTriangle), firstTriangle, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    //second triangle set up
-    glBindVertexArray(VAO[1]);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(secondTriangle), secondTriangle, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
 
     //unbind the data after everything
-    //glBindBuffer(GL_ARRAY_BUFFER, 0);
-    //glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
     //this line draws the wireframe polygons
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -216,14 +195,17 @@ int main(void)
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram); //specify open gl to use the fragement and vertex shaders we defined earlier
+        glUseProgram(shaderProgram); //specify open gl to use the fragement and vertex shaders we defined earlier 
         
-        glBindVertexArray(VAO[0]);
+        //update the color for the triangle
+        float timeValue = glfwGetTime();
+        float greenValue = sin(timeValue) / 2.0f + 0.5f;
+        int vertexColorLocation = glGetUniformLocation(shaderProgram, "globalColor");
+        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+        
+        glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        glUseProgram(yellowShaderProgram);
-        glBindVertexArray(VAO[1]);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
         //glBindVertexArray(0);
@@ -233,6 +215,7 @@ int main(void)
         glfwPollEvents();        
     }
 
+    glDeleteProgram(shaderProgram);
 
 
     //close glfw cleanly

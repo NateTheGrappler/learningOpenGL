@@ -1,27 +1,25 @@
 #shader vertex
 #version 330 core
 layout (location = 0) in vec4 aPos;
+out vec4 vertexColor;
 void main()
 {
-   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+	//set both the position for the vertex given what is in the array, and also set up vertex color to be pased in
+   gl_Position = vec4(aPos.xyz, 1.0);
+   vertexColor = vec4(0.5, 0.0, 0.0, 1.0); 
 };
 
 
 
 #shader fragement
 #version 330 core
-out vec4 FragColor;
+out vec4 FragColor;		  //the out variable that this passes through to the pipline to color the pixe
+in vec4 vertexColor;	  //the variable that was passed from vertex shader earlier down the line
+
+uniform vec4 globalColor; //a uniform is a global variable that can be accessed by any shader in the program
+
 void main()
 {
-   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-};
-
-
-
-#shader fragmentYellow
-#version 330 core
-out vec4 FragColor;
-void main()
-{
-   FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+	//have the output color be the already set up vertex color
+   FragColor = globalColor;
 };
