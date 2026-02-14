@@ -43,6 +43,9 @@ int main(void)
     
     Shader shaderProgram("src/res/shaders/Basic.shader");
 
+    float offset = 0.5;
+    shaderProgram.use();
+    shaderProgram.setUniformFloat("offset", offset);
 
     //------------------------------Vertex code----------------------------
    
