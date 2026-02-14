@@ -148,10 +148,10 @@ int main(void)
     //set up verticies for triangle in a terms of normalized coordinates
     float firstTriangle[] =
     {
-        //first triangle
-        -0.8f, -0.8f, 0.0f,  // left 
-         0.8f, -0.8f, 0.0f,  // right
-         0.0f,  0.8f, 0.0f   // top
+        //vertex data        //color data
+        -0.8f, -0.8f, 0.0f,  1.0f, 0.0f, 0.0f,
+         0.8f, -0.8f, 0.0f,  0.0f, 1.0f, 0.0f,
+         0.0f,  0.8f, 0.0f,  0.0f, 0.0f, 1.0f
     };
 
     unsigned int indicies[] =
@@ -173,8 +173,14 @@ int main(void)
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(firstTriangle), firstTriangle, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    
+    //the index where the attribute is specified, the type of data stored there, if you want to normalize it
+    //the offset in bytes between this data point and the next one (stride), offset from the start of the array to where the first attribute you want is at
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); 
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    
     glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
 
 
     //unbind the data after everything
@@ -198,10 +204,10 @@ int main(void)
         glUseProgram(shaderProgram); //specify open gl to use the fragement and vertex shaders we defined earlier 
         
         //update the color for the triangle
-        float timeValue = glfwGetTime();
-        float greenValue = sin(timeValue) / 2.0f + 0.5f;
-        int vertexColorLocation = glGetUniformLocation(shaderProgram, "globalColor");
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+        //float timeValue = glfwGetTime();
+        //float greenValue = sin(timeValue) / 2.0f + 0.5f;
+        //int vertexColorLocation = glGetUniformLocation(shaderProgram, "globalColor");
+        //glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
         
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
