@@ -1,33 +1,113 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
 
-//vertex shader code
-const char* vertexShaderSource = "#version 330 core\n"
-"layout (location = 0) in vec3 aPos;\n"
-"void main()\n"
-"{\n"
-"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-"}\0";
+//struct that holds the source for the shaders
+struct ShaderPrograms
+{
+    std::string VertexSource;
+    std::string FragementSource;
+    std::string YellowFragementSource;
+};
+static ShaderPrograms parseShader(std::string filePath)
+{
 
-//fragment shader code
-const char* fragmentShaderSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-"}\n\0";
+    //enum class to store the shader types
+    enum class ShaderType
+    {
+        NONE = -1, VERTEX = 0, FRAGEMENT=1, FRAGEMENTYELLOW=2
+    };
 
-const char* fragmentShaderYellowSource = "#version 330 core\n"
-"out vec4 FragColor;\n"
-"void main()\n"
-"{\n"
-"   FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
-"}\n\0";
+
+    //set up filepath as well as buffer to toss string data into
+    std::ifstream stream(filePath);
+    std::stringstream ss[3];
+    ShaderType type = ShaderType::NONE;
+    
+
+    //read file line by line
+    std::string line;
+    while (getline(stream, line))
+    {
+
+        //check to see if the .find() function finds the position of said string
+        if (line.find("#shader") != std::string::npos)
+        {
+            if (line.find("vertex") != std::string::npos)
+            {
+                //set as vertex shader
+                type = ShaderType::VERTEX;
+            }
+            else if (line.find("fragement") != std::string::npos)
+            {
+                //set as fragment shader
+                type = ShaderType::FRAGEMENT;
+            }
+            else if (line.find("fragmentYellow") != std::string::npos)
+            {
+                //set as fragment shader
+                type = ShaderType::FRAGEMENTYELLOW;
+            }
+        }
+        else
+        {
+            //at given shader type, index into array
+            ss[(int)type] << line << '\n';
+        }
+    }
+
+    return { ss[0].str(), ss[1].str(), ss[2].str() };
+}
+static unsigned int compileShader(unsigned int type, const std::string& source)
+{
+    //create the shader and compile it given the type of shader it is and the source code of the shader
+    unsigned int shader = glCreateShader(type);
+    const char* src = source.c_str();
+    glShaderSource(shader, 1, &src, nullptr);
+    glCompileShader(shader);
+
+    //use glGetShaderiv in order to check if the shader compiled correctly or not
+    int result;
+    char infoLog[512];
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
+    if (!result)
+    {
+        glGetShaderInfoLog(shader, 512, NULL, infoLog);
+        std::cout << "Failed to initialize "  << (type == GL_FRAGMENT_SHADER ? "fragement" : "vertex") << " shader " << infoLog << std::endl;
+        glDeleteShader(shader);
+        return 0;
+    }
+
+    //return the compiled shader if successful
+    return shader;
+}
+static unsigned int createShader(const std::string& vertexShader, const std::string& fragmentShader) 
+{
+    //create the shader program, and then also compile both your vertex and frag shaders
+    unsigned int program = glCreateProgram();
+    unsigned int vs = compileShader(GL_VERTEX_SHADER, vertexShader);
+    unsigned int fs = compileShader(GL_FRAGMENT_SHADER, fragmentShader);
+
+    //link the compiled shaders to the shader program, then compile shaderprogram
+    glAttachShader(program, vs);
+    glAttachShader(program, fs);
+    glLinkProgram(program);
+
+    //delete the now uneeded vertex and fragement shaders as they are stored in program
+    glDeleteShader(vs);
+    glDeleteShader(fs);
+
+    return program;
+}
+
 
 //settings
 const unsigned int screenWidth  = 800;
@@ -61,69 +141,14 @@ int main(void)
 
 
     //------------------------------shader code---------------------------
-    //create a var and then use that far to store the source code for the given shader created before, passing in ssaid code, and the compiling it
-    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-
-    //check to see if your shader compiled correctly
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "Failed to initialize vertex shader " << infoLog << std::endl;
-    }
-
-    //now do the same for the fragment shader
-    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "Failed to initialize fragment shader " << infoLog <<  std::endl;
-    }
-
-    unsigned int fragmentShaderYellow = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShaderYellow, 1, &fragmentShaderYellowSource, NULL);
-    glCompileShader(fragmentShaderYellow);
-    glGetShaderiv(fragmentShaderYellow, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "Failed to initialize yellow fragment shader " << infoLog <<  std::endl;
-    }
-
-    //lastly create a shader program that is used for the actual rendering, and then link the complied shaders into it
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    //check to see if shader program was linked correctly
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "shader program linking failed: " << infoLog << std::endl;
-    }
-
-    unsigned int yellowShaderProgram = glCreateProgram();
-    glAttachShader(yellowShaderProgram, vertexShader);
-    glAttachShader(yellowShaderProgram, fragmentShaderYellow);
-    glLinkProgram(yellowShaderProgram);
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "shader program yellow linking failed: " << infoLog << std::endl;
-    }
     
-    //delete the shader objects given that they arent needed after program is formed
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    ShaderPrograms programs = parseShader("src/res/shaders/Basic.shader");
+    std::cout << programs.VertexSource << std::endl;
+    std::cout << programs.FragementSource << std::endl;
+    std::cout << programs.YellowFragementSource << std::endl;
+
+    unsigned int shaderProgram = createShader(programs.VertexSource, programs.FragementSource);
+    unsigned int yellowShaderProgram = createShader(programs.VertexSource, programs.YellowFragementSource);
 
 
     //------------------------------Vertex code----------------------------
