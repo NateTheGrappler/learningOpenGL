@@ -11,7 +11,7 @@ void main()
 {
 	//set both the position for the vertex given what is in the array, and also set up vertex color to be pased in
    gl_Position = vec4(aPos.xyz, 1.0);
-   vertexColor = gl_Position; 
+   vertexColor = vec4(aColor.xyz, 1.0); 
 };
 
 
