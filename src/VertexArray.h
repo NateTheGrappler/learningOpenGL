@@ -1,5 +1,6 @@
 #pragma once
-#include <vector>
+#include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
 
 class VertexArray
 {
@@ -12,7 +13,7 @@ public:
 	~VertexArray();
 
 	//set attribute function
-	void setAttribute();
+	void setBufferAttribute(VertexBuffer& vertexBuffer, VertexBufferLayout& layout);
 	void bind();
 	void unbind();
 };

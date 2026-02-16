@@ -4,6 +4,7 @@
 #include "shader.h"
 #include "IndexBuffer.h"
 #include "VertexBuffer.h"
+#include "VertexArray.h"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -55,7 +56,6 @@ int main(void)
          0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,
          0.5f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,
         -0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 1.0f
-
     };
 
     unsigned int indicies[] =
@@ -64,31 +64,18 @@ int main(void)
         2, 3, 0, //second triangle
     };
 
-    //create vertex buffer object and vertex array object
-    unsigned int VAO;
 
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    //set up the vertex buffer object
+    //create the vertex buffer object, the index buffer object, and the vertex array object
+    VertexArray VAO;
     VertexBuffer VBO(firstTriangle, 24 * sizeof(float));
-
-    //set up the index buffer object
     IndexBuffer IBO(indicies, 6);
+    VertexBufferLayout layout;
 
 
-    //the index where the attribute is specified, the type of data stored there, if you want to normalize it
-    //the offset in bytes between this data point and the next one (stride), offset from the start of the array to where the first attribute you want is at
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-
-    //unbind the data after everything
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
+    layout.push<float>(2); //vertex positions
+    layout.push<float>(2); //vertex color
+    VAO.setBufferAttribute(VBO, layout);
+    
 
     //------------------------------Rendering while loop------------------
     while (!glfwWindowShouldClose(window))
@@ -104,7 +91,7 @@ int main(void)
         shaderProgram.use();
 
         //perform the actual drawing functions
-        glBindVertexArray(VAO);
+        VAO.bind();
         IBO.bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
