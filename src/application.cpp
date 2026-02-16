@@ -1,10 +1,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
-#include "shader.h"
-#include "IndexBuffer.h"
-#include "VertexBuffer.h"
-#include "VertexArray.h"
+#include "Renderer.h"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -21,7 +18,6 @@ int main(void)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);                                                       //configure whatever is specified, and then choosen option from given enum
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);                                                       //configure whatever is specified, and then choosen option from given enum
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
     GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "LearnOpenGL", NULL, NULL);         //intialize the window, and then make sure that it was created successfully
     if (window == NULL)
     {
@@ -29,11 +25,9 @@ int main(void)
         glfwTerminate();
         return -1;
     }
-
     //set up changing the viewport whenever you want to resize
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))                                             //Initialize the glad library
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
@@ -72,28 +66,23 @@ int main(void)
     VertexBufferLayout layout;
 
 
-    layout.push<float>(2); //vertex positions
-    layout.push<float>(2); //vertex color
+    layout.push<float>(3); //vertex positions
+    layout.push<float>(3); //vertex color
     VAO.setBufferAttribute(VBO, layout);
     
 
     //------------------------------Rendering while loop------------------
+    Renderer renderer;
     while (!glfwWindowShouldClose(window))
     {
         //process input
         processInput(window);
 
-        //render functions
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
 
-        //specify the shader to use (custom shader class)
-        shaderProgram.use();
 
-        //perform the actual drawing functions
-        VAO.bind();
-        IBO.bind();
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        //call the renderer class to draw
+        renderer.clear();
+        renderer.Draw(VAO, IBO, shaderProgram);
 
         //swap render buffers and poll key press events
         glfwSwapBuffers(window);

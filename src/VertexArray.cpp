@@ -12,11 +12,11 @@ VertexArray::~VertexArray()
     GLCall(glDeleteVertexArrays(1, &m_rendererID));
 }
 
-void VertexArray::bind()
+void VertexArray::bind() const
 {
     glBindVertexArray(m_rendererID);
 }
-void VertexArray::unbind()
+void VertexArray::unbind() const
 {
     glBindVertexArray(0);
 }

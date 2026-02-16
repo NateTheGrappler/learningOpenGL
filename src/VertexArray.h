@@ -14,6 +14,6 @@ public:
 
 	//set attribute function
 	void setBufferAttribute(VertexBuffer& vertexBuffer, VertexBufferLayout& layout);
-	void bind();
-	void unbind();
+	void bind() const;
+	void unbind() const;
 };
