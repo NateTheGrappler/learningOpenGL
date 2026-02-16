@@ -2,6 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include "shader.h"
+#include "IndexBuffer.h"
+#include "VertexBuffer.h"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -26,7 +28,7 @@ int main(void)
         glfwTerminate();
         return -1;
     }
-   
+
     //set up changing the viewport whenever you want to resize
     glfwMakeContextCurrent(window);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -40,13 +42,11 @@ int main(void)
 
 
     //------------------------------shader code---------------------------
-    
+
     Shader shaderProgram("src/res/shaders/Basic.shader");
 
-    
-
     //------------------------------Vertex code----------------------------
-   
+    {
     //set up verticies for triangle in a terms of normalized coordinates
     float firstTriangle[] =
     {
@@ -65,30 +65,21 @@ int main(void)
     };
 
     //create vertex buffer object and vertex array object
-    unsigned int VBO, VAO;
-    unsigned int EBO;
+    unsigned int VAO;
 
-
-    //bind the vertex buffer object
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(firstTriangle), firstTriangle, GL_STATIC_DRAW);
-
-
-    //bind the vertex array, for either drawing or for ebo to use to draw
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
+    //set up the vertex buffer object
+    VertexBuffer VBO(firstTriangle, 24 * sizeof(float));
 
-    //bind the indicies arrays so it can index into the VAO and draw the triangle
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indicies, GL_STATIC_DRAW);
+    //set up the index buffer object
+    IndexBuffer IBO(indicies, 6);
 
 
     //the index where the attribute is specified, the type of data stored there, if you want to normalize it
     //the offset in bytes between this data point and the next one (stride), offset from the start of the array to where the first attribute you want is at
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0); 
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
@@ -96,9 +87,7 @@ int main(void)
 
     //unbind the data after everything
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    //this line draws the wireframe polygons
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBindVertexArray(0);
 
 
     //------------------------------Rendering while loop------------------
@@ -113,15 +102,17 @@ int main(void)
 
         //specify the shader to use (custom shader class)
         shaderProgram.use();
-        
+
         //perform the actual drawing functions
+        glBindVertexArray(VAO);
+        IBO.bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
         //swap render buffers and poll key press events
-        glfwSwapBuffers(window); 
-        glfwPollEvents();        
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     }
-
+    }
 
     //close glfw cleanly
     glfwTerminate();
@@ -142,5 +133,20 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, true);
+    }
+    else if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+    {
+        //get the polygon mode
+        GLint polygonMode[2];
+        glGetIntegerv(GL_POLYGON_MODE, &polygonMode[0]);
+
+        if (polygonMode[0] == GL_LINE)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+        else if (polygonMode[0] == GL_FILL)
+        {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
     }
 }
