@@ -25,6 +25,7 @@ void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader
 	IBO.bind();
 	VAO.bind();
 
+	//std::cout << "Index buffer count: " << IBO.getCount() << std::endl;
 	glDrawElements(GL_TRIANGLES, IBO.getCount(), GL_UNSIGNED_INT, nullptr);
 
 }
