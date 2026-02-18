@@ -73,5 +73,8 @@
     <Image Include="src\res\textures\brick.jpg">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="src\res\textures\squidimus.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

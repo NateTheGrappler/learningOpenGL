@@ -1,9 +1,7 @@
 #define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
-//#define STB_IMAGE_IMPLEMENTATION
-//#include "stb_image.h"
 
 #include "Renderer.h"
 #include <memory>
@@ -48,10 +46,9 @@ int main(void)
 
     //------------------------------Texture code----------------------------
     std::vector<std::shared_ptr<Texture>> textures;
-    auto texture1 = std::make_shared<Texture>("src/res/textures/VenusDirt.png");
-    auto texture2 = std::make_shared<Texture>("src/res/textures/brick.jpg");
+    auto texture1 = std::make_shared<Texture>("src/res/textures/squidimus.png");
     textures.push_back(texture1);
-    textures.push_back(texture2);
+
 
     //------------------------------Vertex code----------------------------
     {
@@ -85,11 +82,22 @@ int main(void)
     VAO.setBufferAttribute(VBO, layout);
     
 
+    //------------------------------Vertex and Matrix code----------------------------
+    
 
+    ////create a new uniform matrix and set the given diagonal values of it to one
+    //glm::mat4 trans = glm::mat4(1.0f);
+    ////now set up that matrix to rotate, using that uniform matrix, and then the angle for the sin and cos, and then the axis about which to rotate which is z
+    //trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ////now take that same matrix which is rotated, and scale it down by half in all axis
+    //trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
+    //
+    //unsigned int transformLoc = glGetUniformLocation(shaderProgram.ID, "transform");
+    //glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 
     //------------------------------Rendering while loop------------------
     Renderer renderer;
-
+    renderer.enableBlending(true);
 
     while (!glfwWindowShouldClose(window))
     {

@@ -18,6 +18,7 @@ class Renderer
 {
 public:
     void Draw(const VertexArray&, const IndexBuffer&, const Shader&, const std::vector<std::shared_ptr<Texture>>& textures) const;
+    void enableBlending(bool yesorno);
     void clear();
     void clear(float r, float g, float b, float a);
 };
