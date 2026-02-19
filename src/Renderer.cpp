@@ -25,6 +25,20 @@ bool GLLogCall(const char* function, const char* file, int line)
 
 void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader& shader, const std::vector<std::shared_ptr<Texture>>& textures) const
 {
+	glm::vec3 cubePositions[] = {
+	glm::vec3(0.0f,  0.0f,  0.0f),
+	glm::vec3(3.0f,  5.0f, -15.0f),
+	glm::vec3(-2.5f, -2.2f, -2.5f),
+	glm::vec3(-4.8f, -2.0f, -12.3f),
+	glm::vec3(3.4f, -0.4f, -3.5f),
+	glm::vec3(-2.7f,  3.0f, -7.5f),
+	glm::vec3(2.3f, -2.0f, -2.5f),
+	glm::vec3(2.5f,  2.0f, -2.5f),
+	glm::vec3(2.5f,  0.2f, -1.5f),
+	glm::vec3(-2.3f,  1.0f, -1.5f),
+	glm::vec3(-0.0f,  1.75f,-5.0f)
+	};
+
 	//bind all the needed things to draw in opengl
 	shader.use();
 
@@ -36,31 +50,43 @@ void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader
 		textures[i]->bind();
 	}
 
-	glm::mat4 trans = glm::mat4(1.0f);
 
-	// Set the transform uniform
-	trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-	trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-	unsigned int transformLoc = glGetUniformLocation(shader.ID, "transform");
-	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+	//the math for project in 3d space
+	glm::mat4 model      = glm::mat4(1.0f); //have it be the uniform identity matrix (the diagonal ones)
+	glm::mat4 view       = glm::mat4(1.0f);
+	glm::mat4 projection = glm::mat4(1.0f);
+	model      = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+	view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
+	projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 
-	IBO.bind();
-	VAO.bind();
-	glDrawElements(GL_TRIANGLES, IBO.getCount(), GL_UNSIGNED_INT, nullptr);
+	//get the location of the shader uniform variables
+	unsigned int modelLocation = glGetUniformLocation(shader.ID, "model");
+	unsigned int viewLocation  = glGetUniformLocation(shader.ID, "view");
+	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
 
+	shader.setMat4("projection", projection);
 
-	//reset the matrix and then set a whole new set of transforms
-	trans = glm::mat4(1.0f);
-	trans = glm::translate(trans, glm::vec3(-0.5f, 0.5f, 0.0f));
-	float scaleAmount = static_cast<float>(sin(glfwGetTime()));
-
-	trans = glm::scale(trans, glm::vec3(1.0f, 1.0f, scaleAmount));
-	unsigned int transformLoc1 = glGetUniformLocation(shader.ID, "transform");
-	glUniformMatrix4fv(transformLoc1, 1, GL_FALSE, glm::value_ptr(trans));
+	float time = (float)glfwGetTime();
 
 	IBO.bind();
 	VAO.bind();
-	glDrawElements(GL_TRIANGLES, IBO.getCount(), GL_UNSIGNED_INT, nullptr);
+
+	for (unsigned int i = 0; i < 11; i++)
+	{
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, cubePositions[i]);
+
+		// Make cubes rotate based on time
+		// Each cube rotates at a different speed by using (i+1) as a multiplier
+		float angle = time * 20.0f * (i + 1); // Speed multiplier based on cube index
+		model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
+		shader.setMat4("model", model);
+		glDrawElements(GL_TRIANGLES, IBO.getCount(), GL_UNSIGNED_INT, nullptr);
+	}
+
+	
 }
 
 void Renderer::enableBlending(bool yesorno)
@@ -79,12 +105,12 @@ void Renderer::enableBlending(bool yesorno)
 
 void Renderer::clear()
 {
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void Renderer::clear(float r, float g, float b, float a)
 {
 	//render functions
 	glClearColor(r,g,b,a);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

@@ -8,6 +8,10 @@
 #include <iostream>
 #include <glad/glad.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 struct ShaderPrograms
 {
 	std::string VertexSource;
@@ -39,6 +43,17 @@ public:
 	{
 		glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
 	}
+    //-----------------------------------------------------------------------------
+    void setVec2(const std::string& name, const glm::vec2 &value) const
+    {
+        glUniform2fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
+    }
+    //--------------------------------------------------------------------------------------
+    void setMat4(const std::string& name, const glm::mat4& mat) const
+    {
+        glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+    }
+
 
     //--------------------------------------constructor--------------------------------------
     Shader(const std::string& shaderPath)
