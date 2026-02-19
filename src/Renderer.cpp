@@ -26,17 +26,17 @@ bool GLLogCall(const char* function, const char* file, int line)
 void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader& shader, const std::vector<std::shared_ptr<Texture>>& textures) const
 {
 	glm::vec3 cubePositions[] = {
-	glm::vec3(0.0f,  0.0f,  0.0f),
-	glm::vec3(3.0f,  5.0f, -15.0f),
-	glm::vec3(-2.5f, -2.2f, -2.5f),
-	glm::vec3(-4.8f, -2.0f, -12.3f),
-	glm::vec3(3.4f, -0.4f, -3.5f),
-	glm::vec3(-2.7f,  3.0f, -7.5f),
-	glm::vec3(2.3f, -2.0f, -2.5f),
-	glm::vec3(2.5f,  2.0f, -2.5f),
-	glm::vec3(2.5f,  0.2f, -1.5f),
-	glm::vec3(-2.3f,  1.0f, -1.5f),
-	glm::vec3(-0.0f,  1.75f,-5.0f)
+	glm::vec3( 0.0f,  0.0f,   0.0f),
+	glm::vec3( 3.0f,  5.0f,  -15.0f),
+	glm::vec3(-2.5f, -2.2f,  -2.5f),
+	glm::vec3(-4.8f, -2.0f,  -12.3f),
+	glm::vec3( 3.4f, -0.4f,  -3.5f),
+	glm::vec3(-2.7f,  3.0f,  -7.5f),
+	glm::vec3( 2.3f, -2.0f,  -2.5f),
+	glm::vec3( 2.5f,  2.0f,  -2.5f),
+	glm::vec3( 2.5f,  0.2f,  -1.5f),
+	glm::vec3(-2.3f,  1.0f,  -1.5f),
+	glm::vec3(-0.0f,  1.75f, -5.0f)
 	};
 
 	//bind all the needed things to draw in opengl
@@ -50,13 +50,15 @@ void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader
 		textures[i]->bind();
 	}
 
+	float scaleAmount = sin(float(glfwGetTime()));
 
 	//the math for project in 3d space
 	glm::mat4 model      = glm::mat4(1.0f); //have it be the uniform identity matrix (the diagonal ones)
 	glm::mat4 view       = glm::mat4(1.0f);
 	glm::mat4 projection = glm::mat4(1.0f);
+	model	   = glm::scale(model, glm::vec3(scaleAmount, scaleAmount, scaleAmount));
 	model      = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-	view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
+	view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 	projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 
 	//get the location of the shader uniform variables
@@ -72,19 +74,19 @@ void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader
 	IBO.bind();
 	VAO.bind();
 
-	for (unsigned int i = 0; i < 11; i++)
-	{
-		glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, cubePositions[i]);
+	//for (unsigned int i = 0; i < 11; i++)
+	//{
+	//	glm::mat4 model = glm::mat4(1.0f);
+	//	model = glm::translate(model, cubePositions[i]);
 
-		// Make cubes rotate based on time
-		// Each cube rotates at a different speed by using (i+1) as a multiplier
-		float angle = time * 20.0f * (i + 1); // Speed multiplier based on cube index
-		model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+	//	// Make cubes rotate based on time
+	//	// Each cube rotates at a different speed by using (i+1) as a multiplier
+	//	float angle = time * 20.0f * (i + 1); // Speed multiplier based on cube index
+	//	model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-		shader.setMat4("model", model);
-		glDrawElements(GL_TRIANGLES, IBO.getCount(), GL_UNSIGNED_INT, nullptr);
-	}
+	//	shader.setMat4("model", model);
+	//}
+	glDrawElements(GL_TRIANGLES, IBO.getCount(), GL_UNSIGNED_INT, nullptr);
 
 	
 }
