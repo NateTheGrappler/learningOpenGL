@@ -36,7 +36,7 @@ void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader
 	glm::vec3( 2.5f,  2.0f,  -2.5f),
 	glm::vec3( 2.5f,  0.2f,  -1.5f),
 	glm::vec3(-2.3f,  1.0f,  -1.5f),
-	glm::vec3(-0.0f,  1.75f, -5.0f)
+	glm::vec3(-0.0f,  3.0f, -5.0f)
 	};
 
 	//bind all the needed things to draw in opengl
@@ -50,23 +50,19 @@ void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader
 		textures[i]->bind();
 	}
 
-	float scaleAmount = sin(float(glfwGetTime()));
 
 	//the math for project in 3d space
-	glm::mat4 model      = glm::mat4(1.0f); //have it be the uniform identity matrix (the diagonal ones)
 	glm::mat4 view       = glm::mat4(1.0f);
+	float radius = 10.0f;
+	float camX = static_cast<float>(sin(glfwGetTime()) * radius);
+	float camY = static_cast<float>(cos(glfwGetTime() * 0.5f) * radius);
+	float camZ = static_cast<float>(cos(glfwGetTime()) * radius);
+	view = glm::lookAt(glm::vec3(camX, camY, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	shader.setMat4("view", view);
+
+
 	glm::mat4 projection = glm::mat4(1.0f);
-	model	   = glm::scale(model, glm::vec3(scaleAmount, scaleAmount, scaleAmount));
-	model      = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-	view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 	projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-
-	//get the location of the shader uniform variables
-	unsigned int modelLocation = glGetUniformLocation(shader.ID, "model");
-	unsigned int viewLocation  = glGetUniformLocation(shader.ID, "view");
-	glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
-	glUniformMatrix4fv(viewLocation, 1, GL_FALSE, &view[0][0]);
-
 	shader.setMat4("projection", projection);
 
 	float time = (float)glfwGetTime();
@@ -74,19 +70,24 @@ void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader
 	IBO.bind();
 	VAO.bind();
 
-	//for (unsigned int i = 0; i < 11; i++)
-	//{
-	//	glm::mat4 model = glm::mat4(1.0f);
-	//	model = glm::translate(model, cubePositions[i]);
+	for (unsigned int i = 0; i < 11; i++)
+	{
+		glm::mat4 model = glm::mat4(1.0f);
 
-	//	// Make cubes rotate based on time
-	//	// Each cube rotates at a different speed by using (i+1) as a multiplier
-	//	float angle = time * 20.0f * (i + 1); // Speed multiplier based on cube index
-	//	model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+		model = glm::translate(model, cubePositions[i]);
+		//model = glm::scale(model, glm::vec3(scaleAmount, scaleAmount, scaleAmount));
 
-	//	shader.setMat4("model", model);
-	//}
-	glDrawElements(GL_TRIANGLES, IBO.getCount(), GL_UNSIGNED_INT, nullptr);
+		// Make cubes rotate based on time
+		// Each cube rotates at a different speed by using (i+1) as a multiplier
+		if (i % 2 == 0)
+		{
+			float angle = time * 20.0f * (i + 1); // Speed multiplier based on cube index
+			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+		}
+
+		shader.setMat4("model", model);
+		glDrawElements(GL_TRIANGLES, IBO.getCount(), GL_UNSIGNED_INT, nullptr);
+	}
 
 	
 }

@@ -154,6 +154,7 @@
     <Image Include="src\res\textures\brick.jpg" />
     <Image Include="src\res\textures\squidimus.png" />
     <Image Include="src\res\textures\VenusDirt.png" />
+    <Image Include="src\res\textures\VTUBER.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
