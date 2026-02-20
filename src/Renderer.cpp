@@ -4,9 +4,7 @@
 #include "Renderer.h"
 
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+
 
 void GLClearError()
 {
@@ -23,7 +21,7 @@ bool GLLogCall(const char* function, const char* file, int line)
 	return true;
 }
 
-void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader& shader, const std::vector<std::shared_ptr<Texture>>& textures) const
+void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader& shader, const std::vector<std::shared_ptr<Texture>>& textures, Camera& camera) const
 {
 	glm::vec3 cubePositions[] = {
 	glm::vec3( 0.0f,  0.0f,   0.0f),
@@ -52,17 +50,13 @@ void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader
 
 
 	//the math for project in 3d space
-	glm::mat4 view       = glm::mat4(1.0f);
-	float radius = 10.0f;
-	float camX = static_cast<float>(sin(glfwGetTime()) * radius);
-	float camY = static_cast<float>(cos(glfwGetTime() * 0.5f) * radius);
-	float camZ = static_cast<float>(cos(glfwGetTime()) * radius);
-	view = glm::lookAt(glm::vec3(camX, camY, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 view = camera.getViewMatrix();
 	shader.setMat4("view", view);
 
+	//std::cout << "X: " << camera.m_cameraPos.x << "Y: " << camera.m_cameraPos.y << "Z: " << camera.m_cameraPos.z << "\n";
 
 	glm::mat4 projection = glm::mat4(1.0f);
-	projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+	projection = glm::perspective(glm::radians(camera.m_zoom), 800.0f / 600.0f, 0.1f, 100.0f);
 	shader.setMat4("projection", projection);
 
 	float time = (float)glfwGetTime();
@@ -73,11 +67,8 @@ void Renderer::Draw(const VertexArray& VAO, const IndexBuffer& IBO, const Shader
 	for (unsigned int i = 0; i < 11; i++)
 	{
 		glm::mat4 model = glm::mat4(1.0f);
-
 		model = glm::translate(model, cubePositions[i]);
-		//model = glm::scale(model, glm::vec3(scaleAmount, scaleAmount, scaleAmount));
 
-		// Make cubes rotate based on time
 		// Each cube rotates at a different speed by using (i+1) as a multiplier
 		if (i % 2 == 0)
 		{
@@ -116,4 +107,12 @@ void Renderer::clear(float r, float g, float b, float a)
 	//render functions
 	glClearColor(r,g,b,a);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+float Renderer::calculateDeltaTime()
+{
+	float currentFrame = glfwGetTime();
+	m_deltaTime = currentFrame - m_lastFrame;
+	m_lastFrame = currentFrame;
+	return m_deltaTime;
 }

@@ -9,6 +9,19 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+
+float deltaTime = 0.0f;	// Time between current frame and last frame
+float lastFrame = 0.0f; // Time of last frame
+
+
+glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
+
+Camera camera(cameraPos);
+float lastX = 800 / 2.0f;
+float lastY = 600 / 2.0f;
+bool firstMouse = true;
 
 
 //settings
@@ -36,9 +49,11 @@ int main(void)
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
-    glViewport(0, 0, 800, 600);                                                                         //set the viewport of the window so that way open gl knows the size and position of the render
+    glViewport(0, 0, 800, 600); 
 
-
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     //------------------------------shader code---------------------------
 
@@ -127,19 +142,6 @@ int main(void)
     VAO.setBufferAttribute(VBO, layout);
     
 
-    //------------------------------Vertex and Matrix code----------------------------
-    
-
-    ////create a new uniform matrix and set the given diagonal values of it to one
-    //glm::mat4 trans = glm::mat4(1.0f);
-    ////now set up that matrix to rotate, using that uniform matrix, and then the angle for the sin and cos, and then the axis about which to rotate which is z
-    //trans = glm::rotate(trans, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ////now take that same matrix which is rotated, and scale it down by half in all axis
-    //trans = glm::scale(trans, glm::vec3(0.5, 0.5, 0.5));
-    //
-    //unsigned int transformLoc = glGetUniformLocation(shaderProgram.ID, "transform");
-    //glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
-
     //------------------------------Rendering while loop------------------
     Renderer renderer;
     renderer.enableBlending(true);
@@ -147,14 +149,15 @@ int main(void)
 
     while (!glfwWindowShouldClose(window))
     {
+        //get delta time
+        deltaTime = renderer.calculateDeltaTime();
+
         //process input
         processInput(window);
        
         //call the renderer class to draw
         renderer.clear(0.2f, 0.3f, 0.3f, 1.0f);
-
-
-        renderer.Draw(VAO, IBO, shaderProgram, textures);
+        renderer.Draw(VAO, IBO, shaderProgram, textures, camera);
 
         //swap render buffers and poll key press events
         glfwSwapBuffers(window);
@@ -176,13 +179,14 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 //handle input detected from user
 void processInput(GLFWwindow* window)
-{
+{    
+
     //if escape key pressed, close the window
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
     {
         glfwSetWindowShouldClose(window, true);
     }
-    else if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
     {
         //get the polygon mode
         GLint polygonMode[2];
@@ -197,4 +201,56 @@ void processInput(GLFWwindow* window)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         }
     }
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(UP, deltaTime);
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    {
+        camera.ProcessKeyboard(DOWN, deltaTime);
+    }
+
+}
+
+//the functions are called whenever the mouse is moved in the glfw window
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = ypos - lastY; //reversed because y-coordinate go from bottom to top
+
+    lastX = xpos;
+    lastY = ypos;
+
+    camera.ProcessMouseMovement(xoffset, yoffset, true);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
